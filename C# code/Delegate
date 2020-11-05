@@ -1,0 +1,120 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Delegate
+{
+    class Product
+    {
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+    }
+
+
+    class ShopCart
+    {
+        public List<Product> Products { get; set; } = new List<Product>();
+
+        public delegate void MentionPrice(decimal totalPrice);
+
+        public decimal GenerateTotal(MentionPrice  mentionSubTotal, Func<List<Product>, decimal, decimal> calculateDiscountTotal, Action<string> UserAlertMessage)
+        {
+
+            decimal totalSum = Products.Sum(x => x.Price);
+
+            mentionSubTotal(totalSum);
+
+            UserAlertMessage("We are applying discount");
+
+            return calculateDiscountTotal(Products, totalSum);
+        }
+
+    }
+
+    class Program
+    {
+        static ShopCart cart = new ShopCart();
+   
+
+        static void Main(string[] args)
+        {
+            
+            SetValues();
+
+
+            Console.WriteLine($"The total for the cart is {cart.GenerateTotal(MentionPrice, CalculateDiscountTotal, UserMessageInfo)} $");
+            Console.WriteLine();
+            
+            
+            /// Анонимные методы
+            /// (total), (products, subtotal), (messageAlert) - все входные параметры методов
+            decimal totalPrice = cart.GenerateTotal((total) => Console.WriteLine($"Total price 2 is {total} $"), 
+                (products, subtotal) => {
+                    if (products.Count > 3)
+                    {
+                        return subtotal * 0.5M;
+                    }
+                    else
+                    {
+                        return subtotal;
+                    }
+                
+                },
+                (messageAlert) => Console.WriteLine($"We are applying cart 2 {messageAlert}")
+            );
+            Console.WriteLine($"The total for the cart 2 is {totalPrice} $");
+
+
+            Console.ReadKey();
+        }
+
+
+
+        // установка значений
+        static void SetValues()
+        {
+            cart.Products.Add(new Product { Price = 2.63M });
+            cart.Products.Add(new Product { Price = 3.65M });
+            cart.Products.Add(new Product { Price = 8.95M });
+            cart.Products.Add(new Product { Price = 7.45M });
+        }
+
+        // Обычный делагат который мы создали
+        static void MentionPrice(decimal totalPrice)
+        {
+            Console.WriteLine($"Total price is : {totalPrice} $");
+        }
+
+
+        // Func - встроенный делегат с возвращаемым типом
+        static decimal CalculateDiscountTotal(List<Product> products, decimal totalSum)
+        {
+            if (totalSum >= 100)
+            {
+                return totalSum * 0.80M;
+            }
+            else if (totalSum >= 50 && totalSum < 100)
+            {
+                return totalSum * 0.90M;
+            }
+            else if (totalSum >= 10 && totalSum < 50)
+            {
+                return totalSum * 0.95M;
+            }
+            else
+            {
+                return totalSum;
+            }
+        }
+
+        // Action - всегда типа void
+        static void UserMessageInfo(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+
+    }
+}
